@@ -1,3 +1,6 @@
 pkg/
 src/
+*.zip
+*.part
+*.gz
 

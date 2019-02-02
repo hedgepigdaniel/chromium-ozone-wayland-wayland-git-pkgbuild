@@ -4,7 +4,8 @@
 # Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
 
 pkgname=chromium
-pkgver=72.0.3626.81
+pkgver=74.0.3687.0
+gitsha=a011df391c95d05da092c2468fe231c8911e5e82
 pkgrel=1
 _launcher_ver=6
 pkgdesc="A web browser built for speed, simplicity, and security"
@@ -21,13 +22,13 @@ optdepends=('pepper-flash: support for Flash content'
             'gnome-keyring: for storing passwords in GNOME keyring'
             'kwallet: for storing passwords in KWallet')
 install=chromium.install
-source=(https://commondatastorage.googleapis.com/chromium-browser-official/$pkgname-$pkgver.tar.xz
+source=("chromium-${pkgver}.zip::https://github.com/Igalia/chromium/archive/${gitsha}.zip"
         chromium-launcher-$_launcher_ver.tar.gz::https://github.com/foutrelis/chromium-launcher/archive/v$_launcher_ver.tar.gz
         chromium-system-icu.patch
         chromium-webrtc-missing-header.patch
         chromium-widevine.patch
         chromium-skia-harmony.patch)
-sha256sums=('dfe89fe389008e6d2098099948d10774989d2f3e8dca6ace78ea4ec636dd8006'
+sha256sums=('e6d7b3d43c09d2a9800c4806b4dfbe69aeb0e4e5afad81313a53cebd2bf54ade'
             '04917e3cd4307d8e31bfb0027a5dce6d086edb10ff8a716024fbb8bb0c7dccf1'
             'e2d284311f49c529ea45083438a768db390bde52949995534034d2a814beab89'
             '63cbed7d7af327c17878a2066c303f106ff08636372721845131f7ff13d87b44'
