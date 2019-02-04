@@ -18,7 +18,7 @@ depends=('gtk3' 'nss' 'alsa-lib' 'xdg-utils' 'libxss' 'libcups' 'libgcrypt'
          'ttf-font' 'systemd' 'dbus' 'libpulse' 'pciutils' 'json-glib'
          'desktop-file-utils' 'hicolor-icon-theme')
 makedepends=('python' 'python2' 'gperf' 'yasm' 'mesa' 'ninja' 'nodejs' 'git'
-             'clang' 'lld' 'gn' 'java-runtime-headless')
+             'clang' 'lld' 'gn' 'java-runtime-headless' 'depot-tools-git')
 optdepends=('pepper-flash: support for Flash content'
             'kdialog: needed for file dialogs in KDE'
             'gnome-keyring: for storing passwords in GNOME keyring'
@@ -189,6 +189,10 @@ build() {
     'link_pulseaudio=true'
     'use_gnome_keyring=false'
     'use_sysroot=false'
+    'use_ozone=true'
+    'use_xkbcommon=true'
+    'use_system_minigbm=true'
+    'use_vaapi=true'
     'linux_use_bundled_binutils=false'
     'use_custom_libcxx=false'
     'use_jumbo_build=true'

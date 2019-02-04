@@ -18,6 +18,7 @@ pkgbase = chromium
 	makedepends = lld
 	makedepends = gn
 	makedepends = java-runtime-headless
+	makedepends = depot-tools-git
 	depends = gtk3
 	depends = nss
 	depends = alsa-lib
