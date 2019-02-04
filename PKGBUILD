@@ -5,11 +5,13 @@
 
 pkgname=chromium
 pkgver=74.0.3687.0
-gitsha=a011df391c95d05da092c2468fe231c8911e5e82
+gitref=a011df391c95d05da092c2468fe231c8911e5e82
+gitrepo=https://github.com/Igalia/chromium.git
 pkgrel=1
 _launcher_ver=6
 pkgdesc="A web browser built for speed, simplicity, and security"
 arch=('x86_64')
+options=(!strip debug)
 url="https://www.chromium.org/Home"
 license=('BSD')
 depends=('gtk3' 'nss' 'alsa-lib' 'xdg-utils' 'libxss' 'libcups' 'libgcrypt'
@@ -22,18 +24,16 @@ optdepends=('pepper-flash: support for Flash content'
             'gnome-keyring: for storing passwords in GNOME keyring'
             'kwallet: for storing passwords in KWallet')
 install=chromium.install
-source=("chromium-${pkgver}.zip::https://github.com/Igalia/chromium/archive/${gitsha}.zip"
-        chromium-launcher-$_launcher_ver.tar.gz::https://github.com/foutrelis/chromium-launcher/archive/v$_launcher_ver.tar.gz
+source=(chromium-launcher-$_launcher_ver.tar.gz::https://github.com/foutrelis/chromium-launcher/archive/v$_launcher_ver.tar.gz
         chromium-system-icu.patch
-        chromium-webrtc-missing-header.patch
         chromium-widevine.patch
-        chromium-skia-harmony.patch)
-sha256sums=('e6d7b3d43c09d2a9800c4806b4dfbe69aeb0e4e5afad81313a53cebd2bf54ade'
-            '04917e3cd4307d8e31bfb0027a5dce6d086edb10ff8a716024fbb8bb0c7dccf1'
+        chromium-cmath.patch
+        chromium-is-constructible.patch)
+sha256sums=('04917e3cd4307d8e31bfb0027a5dce6d086edb10ff8a716024fbb8bb0c7dccf1'
             'e2d284311f49c529ea45083438a768db390bde52949995534034d2a814beab89'
-            '63cbed7d7af327c17878a2066c303f106ff08636372721845131f7ff13d87b44'
             'd081f2ef8793544685aad35dea75a7e6264a2cb987ff3541e6377f4a3650a28b'
-            '5887f78b55c4ecbbcba5930f3f0bb7bc0117c2a41c2f761805fcf7f46f1ca2b3')
+            '00c9439fd2216693d909a806f11b2260abd0ded4feca79136870c2c136a78515'
+            '2fe35a8eaa6b32285ceaab03235802e9cb3da54b08ef49af0796a4e3c7c3078f')
 
 # Possible replacements are listed in build/linux/unbundle/replace_gn_files.py
 # Keys are the names in the above script; values are the dependencies in Arch
@@ -71,7 +71,32 @@ _google_default_client_id=413772536636.apps.googleusercontent.com
 _google_default_client_secret=0ZChLK6AxeA3Isu96MkwqDR4
 
 prepare() {
-  cd "$srcdir/$pkgname-$pkgver"
+  cd "$srcdir"
+
+  # Set up virtualenv to ...encourage... the use of python2
+  # virtualenv2 .venv
+  # source .venv/bin/activate
+
+  gclient config --spec "solutions = [
+    {
+      \"url\": \"${gitrepo}@${gitref}\",
+      \"managed\": False,
+      \"name\": \"src\",
+      \"deps_file\": \".DEPS.git\",
+      \"custom_deps\": {},
+    },
+  ]
+  "
+  if [ ! -d src ]; then
+    git clone --depth 1 file:///home/daniel/code/chromium src
+    cd src
+    git remote set-url origin "${gitrepo}"
+  else
+    cd src
+    git reset --hard HEAD
+  fi
+
+  gclient sync --reset --no-history --nohooks --ignore_locks
 
   # Allow building against system libraries in official builds
   sed -i 's/OFFICIAL_BUILD/GOOGLE_CHROME_BUILD/' \
@@ -86,25 +111,31 @@ prepare() {
   # Load Widevine CDM if available
   patch -Np1 -i ../chromium-widevine.patch
 
-  # https://crbug.com/skia/6663#c10
-  patch -Np0 -i ../chromium-skia-harmony.patch
-
-  # https://webrtc.googlesource.com/src.git/+/3e70781361ed
-  patch -Np0 -i ../chromium-webrtc-missing-header.patch
-
   # https://bugs.gentoo.org/661880#c21
   patch -Np1 -i ../chromium-system-icu.patch
 
+  # https://github.com/Igalia/chromium/issues/525
+  patch -Np1 -i ../chromium-cmath.patch
+  patch -Np1 -i ../chromium-is-constructible.patch ## Absolute dirty hack
+
   # Remove compiler flags not supported by our system clang
+  # sed -i \
+  #   -e '/"-Wno-defaulted-function-deleted"/d' \
+  #   build/config/compiler/BUILD.gn
+
   sed -i \
-    -e '/"-Wno-defaulted-function-deleted"/d' \
+    -e '/"-fsplit-lto-unit"/d' \
     build/config/compiler/BUILD.gn
 
   # Force script incompatible with Python 3 to use /usr/bin/python2
-  sed -i '1s|python$|&2|' third_party/dom_distiller_js/protoc_plugins/*.py
+  sed -i '1s|python$|&2|' \
+    -i third_party/dom_distiller_js/protoc_plugins/*.py
 
-  mkdir -p third_party/node/linux/node-linux-x64/bin
-  ln -s /usr/bin/node third_party/node/linux/node-linux-x64/bin/
+  # Obviously, python code sometimes also calls python itself
+  sed -i "s/'python'/'python2'/g" third_party/binutils/download.py
+
+  # mkdir -p third_party/node/linux/node-linux-x64/bin
+  # ln -s /usr/bin/node third_party/node/linux/node-linux-x64/bin/
 
   # Remove bundled libraries for which we will use the system copies; this
   # *should* do what the remove_bundled_libraries.py script does, with the
@@ -121,27 +152,35 @@ prepare() {
 
   python2 build/linux/unbundle/replace_gn_files.py \
     --system-libraries "${!_system_libs[@]}"
+
+  gclient runhooks
 }
 
 build() {
   make -C chromium-launcher-$_launcher_ver
 
-  cd "$srcdir/$pkgname-$pkgver"
+  cd "$srcdir/src"
 
-  if check_buildoption ccache y; then
-    # Avoid falling back to preprocessor mode when sources contain time macros
-    export CCACHE_SLOPPINESS=time_macros
-  fi
+  # _clang_path="${BUILDDIR}${_builddir}/src/src/third_party/llvm-build/Release+Asserts/bin/"
 
+  # export CC="${_clang_path}clang"
+  # export CXX="${_clang_path}clang++"
   export CC=clang
   export CXX=clang++
   export AR=ar
   export NM=nm
 
+  if check_buildoption ccache y; then
+    # Avoid falling back to preprocessor mode when sources contain time macros
+    export CCACHE_SLOPPINESS=time_macros
+    export CC="ccache $CC"
+    export CXX="ccache $CXX"
+  fi
+
   local _flags=(
     'custom_toolchain="//build/toolchain/linux/unbundle:default"'
     'host_toolchain="//build/toolchain/linux/unbundle:default"'
-    'clang_use_chrome_plugins=false'
+    'clang_use_chrome_plugins=true'
     'is_official_build=true' # implies is_cfi=true on x86_64
     'treat_warnings_as_errors=false'
     'fieldtrial_testing_like_official_build=true'
@@ -152,6 +191,8 @@ build() {
     'use_sysroot=false'
     'linux_use_bundled_binutils=false'
     'use_custom_libcxx=false'
+    'use_jumbo_build=true'
+    'remove_webcore_debug_symbols=true'
     'enable_hangout_services_extension=true'
     'enable_widevine=true'
     'enable_nacl=false'
@@ -173,10 +214,12 @@ build() {
     CFLAGS+='   -fno-unwind-tables -fno-asynchronous-unwind-tables'
     CXXFLAGS+=' -fno-unwind-tables -fno-asynchronous-unwind-tables'
     CPPFLAGS+=' -DNO_UNWIND_TABLES'
+  else
+    _flags+=('symbol_level=1')
   fi
 
-  gn gen out/Release --args="${_flags[*]}" --script-executable=/usr/bin/python2
-  ninja -C out/Release chrome chrome_sandbox chromedriver
+  gn gen out/Release -v --args="${_flags[*]}" --script-executable=/usr/bin/python2
+  /usr/bin/ninja -C out/Release chrome chrome_sandbox chromedriver
 }
 
 package() {
@@ -185,7 +228,7 @@ package() {
   install -Dm644 LICENSE \
     "$pkgdir/usr/share/licenses/chromium/LICENSE.launcher"
 
-  cd "$srcdir/$pkgname-$pkgver"
+  cd "$srcdir/src"
 
   install -D out/Release/chrome "$pkgdir/usr/lib/chromium/chromium"
   install -Dm4755 out/Release/chrome_sandbox "$pkgdir/usr/lib/chromium/chrome-sandbox"
