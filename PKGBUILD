@@ -1,13 +1,21 @@
-# Maintainer: Evangelos Foutras <evangelos@foutrelis.com>
+# Maintainer: Daniel Playfair Cal <daniel.playfair.cal@gmail.com>
+# Contributor: Gustavo Alvarez <sl1pkn07@gmail.com>
+# Contributor: Mikhail Vorozhtsov <mikhail.vorozhtsov@gmail.com>
+# Contributor: Nagisa <simonas@kazlauskas.me>
+# Contributor: Misc <andreas.reis@gmail.com>
+# Contributor: Jeagoss <jgoliver@jeago.com>
+# Contributor: Saikrishna Arcot <saiarcot895@gmail.com>
+# Contributor: Steven Newbury <steve@snewbury.org.uk>
+# Contributor: Evangelos Foutras <evangelos@foutrelis.com>
 # Contributor: Pierre Schmitz <pierre@archlinux.de>
 # Contributor: Jan "heftig" Steffens <jan.steffens@gmail.com>
 # Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
 
-pkgname=chromium
+pkgname=chromium-ozone-wayland-git
 pkgver=74.0.3694.0+39+27f5faa20d
 pkgrel=1
 _launcher_ver=6
-pkgdesc="A web browser built for speed, simplicity, and security"
+pkgdesc="Chromium built from the Igalia fork with experimental Wayland support via Ozone"
 arch=('x86_64')
 options=(!strip debug)
 url="https://www.chromium.org/Home"
@@ -15,6 +23,8 @@ license=('BSD')
 depends=('gtk3' 'nss' 'alsa-lib' 'xdg-utils' 'libxss' 'libcups' 'libgcrypt'
          'ttf-font' 'systemd' 'dbus' 'libpulse' 'pciutils' 'json-glib'
          'desktop-file-utils' 'hicolor-icon-theme')
+provides=('chromium')
+conflicts=('chromium')
 makedepends=('python' 'python2' 'gperf' 'yasm' 'mesa' 'ninja' 'nodejs' 'git'
              'clang' 'lld' 'gn' 'java-runtime-headless' 'depot-tools-git')
 optdepends=('pepper-flash: support for Flash content'

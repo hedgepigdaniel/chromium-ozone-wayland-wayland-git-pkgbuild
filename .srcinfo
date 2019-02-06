@@ -1,6 +1,6 @@
-pkgbase = chromium
-	pkgdesc = A web browser built for speed, simplicity, and security
-	pkgver = 74.0.3687.0
+pkgbase = chromium-ozone-wayland-git
+	pkgdesc = Chromium built from the Igalia fork with experimental Wayland support via Ozone
+	pkgver = 74.0.3694.0+39+27f5faa20d
 	pkgrel = 1
 	url = https://www.chromium.org/Home
 	install = chromium.install
@@ -52,6 +52,8 @@ pkgbase = chromium
 	optdepends = kdialog: needed for file dialogs in KDE
 	optdepends = gnome-keyring: for storing passwords in GNOME keyring
 	optdepends = kwallet: for storing passwords in KWallet
+	provides = chromium
+	conflicts = chromium
 	options = !strip
 	options = debug
 	source = chromium-launcher-6.tar.gz::https://github.com/foutrelis/chromium-launcher/archive/v6.tar.gz
@@ -65,5 +67,5 @@ pkgbase = chromium
 	sha256sums = 00c9439fd2216693d909a806f11b2260abd0ded4feca79136870c2c136a78515
 	sha256sums = 2fe35a8eaa6b32285ceaab03235802e9cb3da54b08ef49af0796a4e3c7c3078f
 
-pkgname = chromium
+pkgname = chromium-ozone-wayland-git
 
