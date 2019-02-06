@@ -4,9 +4,7 @@
 # Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
 
 pkgname=chromium
-pkgver=74.0.3687.0
-gitref=a011df391c95d05da092c2468fe231c8911e5e82
-gitrepo=https://github.com/Igalia/chromium.git
+pkgver=74.0.3694.0+39+27f5faa20d
 pkgrel=1
 _launcher_ver=6
 pkgdesc="A web browser built for speed, simplicity, and security"
@@ -34,6 +32,10 @@ sha256sums=('04917e3cd4307d8e31bfb0027a5dce6d086edb10ff8a716024fbb8bb0c7dccf1'
             'd081f2ef8793544685aad35dea75a7e6264a2cb987ff3541e6377f4a3650a28b'
             '00c9439fd2216693d909a806f11b2260abd0ded4feca79136870c2c136a78515'
             '2fe35a8eaa6b32285ceaab03235802e9cb3da54b08ef49af0796a4e3c7c3078f')
+
+# Repository and branch/commit to fetch code from
+_gitrepo=https://github.com/Igalia/chromium.git
+_gitref=ozone-wayland-dev
 
 # Possible replacements are listed in build/linux/unbundle/replace_gn_files.py
 # Keys are the names in the above script; values are the dependencies in Arch
@@ -70,6 +72,8 @@ _google_api_key=AIzaSyDwr302FpOSkGRpLlUpPThNTDPbXcIn_FM
 _google_default_client_id=413772536636.apps.googleusercontent.com
 _google_default_client_secret=0ZChLK6AxeA3Isu96MkwqDR4
 
+export PATH="/opt/depot_tools:${PATH}"
+
 prepare() {
   cd "$srcdir"
 
@@ -79,7 +83,7 @@ prepare() {
 
   gclient config --spec "solutions = [
     {
-      \"url\": \"${gitrepo}@${gitref}\",
+      \"url\": \"${_gitrepo}@${_gitref}\",
       \"managed\": False,
       \"name\": \"src\",
       \"deps_file\": \".DEPS.git\",
@@ -88,9 +92,11 @@ prepare() {
   ]
   "
   if [ ! -d src ]; then
-    git clone --depth 1 file:///home/daniel/code/chromium src
+    # Hopefully 1000 is enough for the last change to chrome/VERSION
+    # git clone --depth 1000 "${_gitrepo}" src
+    git clone --depth 1000 file:///home/daniel/code/chromium src
     cd src
-    git remote set-url origin "${gitrepo}"
+    git remote set-url origin "${_gitrepo}"
   else
     cd src
     git reset --hard HEAD
@@ -154,6 +160,16 @@ prepare() {
     --system-libraries "${!_system_libs[@]}"
 
   gclient runhooks
+}
+
+pkgver() {
+  cd "$srcdir/src"
+  . "chrome/VERSION"
+  tag_version="$MAJOR.$MINOR.$BUILD.$PATCH"
+  tag_commit=$(git rev-list -1 HEAD -- "chrome/VERSION")
+  commits_since=$(git rev-list ${tag_commit}...HEAD --count)
+  head_commit=$(git rev-list -1 --abbrev-commit HEAD)
+  echo "$tag_version+$commits_since+$head_commit"
 }
 
 build() {
