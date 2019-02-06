@@ -77,10 +77,6 @@ export PATH="/opt/depot_tools:${PATH}"
 prepare() {
   cd "$srcdir"
 
-  # Set up virtualenv to ...encourage... the use of python2
-  # virtualenv2 .venv
-  # source .venv/bin/activate
-
   gclient config --spec "solutions = [
     {
       \"url\": \"${_gitrepo}@${_gitref}\",
@@ -91,17 +87,12 @@ prepare() {
     },
   ]
   "
-  if [ ! -d src ]; then
-    # Hopefully 1000 is enough for the last change to chrome/VERSION
-    # git clone --depth 1000 "${_gitrepo}" src
-    git clone --depth 1000 file:///home/daniel/code/chromium src
-    cd src
-    git remote set-url origin "${_gitrepo}"
-  else
-    cd src
-    git reset --hard HEAD
-  fi
+  # Hopefully 1000 is enough to find the last change to chrome/VERSION
+  git clone --depth 1000 "$_gitrepo" src
+  cd src
+  git checkout "$gitref"
 
+  # Download synced projects
   gclient sync --reset --no-history --nohooks --ignore_locks
 
   # Allow building against system libraries in official builds
@@ -140,9 +131,6 @@ prepare() {
   # Obviously, python code sometimes also calls python itself
   sed -i "s/'python'/'python2'/g" third_party/binutils/download.py
 
-  # mkdir -p third_party/node/linux/node-linux-x64/bin
-  # ln -s /usr/bin/node third_party/node/linux/node-linux-x64/bin/
-
   # Remove bundled libraries for which we will use the system copies; this
   # *should* do what the remove_bundled_libraries.py script does, with the
   # added benefit of not having to list all the remaining libraries
@@ -177,12 +165,10 @@ build() {
 
   cd "$srcdir/src"
 
-  # _clang_path="${BUILDDIR}${_builddir}/src/src/third_party/llvm-build/Release+Asserts/bin/"
+  _clang_path="${BUILDDIR}${_builddir}/src/src/third_party/llvm-build/Release+Asserts/bin/"
 
-  # export CC="${_clang_path}clang"
-  # export CXX="${_clang_path}clang++"
-  export CC=clang
-  export CXX=clang++
+  export CC="${_clang_path}clang"
+  export CXX="${_clang_path}clang++"
   export AR=ar
   export NM=nm
 
