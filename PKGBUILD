@@ -18,7 +18,7 @@ _launcher_ver=6
 pkgdesc="Chromium built from the Igalia fork with experimental Wayland support via Ozone"
 arch=('x86_64')
 options=(!strip debug)
-url="https://www.chromium.org/Home"
+url="https://github.com/hedgepigdaniel/chromium-ozone-wayland-wayland-git-pkgbuild"
 license=('BSD')
 depends=('gtk3' 'nss' 'alsa-lib' 'xdg-utils' 'libxss' 'libcups' 'libgcrypt'
          'ttf-font' 'systemd' 'dbus' 'libpulse' 'pciutils' 'json-glib'
