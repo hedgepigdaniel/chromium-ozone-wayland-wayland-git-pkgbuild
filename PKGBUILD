@@ -13,7 +13,7 @@
 
 pkgname=chromium-ozone-wayland-git
 pkgver=74.0.3703.0+24+5c0e21aca5
-pkgrel=2
+pkgrel=3
 _launcher_ver=6
 pkgdesc="Chromium built from the Igalia fork with experimental Wayland support via Ozone"
 arch=('x86_64')
@@ -136,10 +136,6 @@ prepare() {
     build/config/compiler/BUILD.gn
 
   sed -i \
-    -e '/"-Qunused-arguments"/d' \
-    build/config/compiler/BUILD.gn
-
-  sed -i \
     -e '/"-fPIC"/d' \
     build/config/compiler/BUILD.gn
 
@@ -231,6 +227,10 @@ build() {
   CFLAGS+='   -Wno-builtin-macro-redefined'
   CXXFLAGS+=' -Wno-builtin-macro-redefined'
   CPPFLAGS+=' -D__DATE__=  -D__TIME__=  -D__TIMESTAMP__='
+
+  # Avoid error related to -fvar-tracking-assignments
+  CFLAGS+='   -Qunused-arguments'
+  CXXFLAGS+=' -Qunused-arguments'
 
   if check_option strip y; then
     _flags+=('symbol_level=0')
